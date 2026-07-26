@@ -340,8 +340,8 @@ function CompleteProfileContent() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
-      const res = await fetch(`${baseUrl}/api/user/profile`, {
+      // Always use a relative URL — works in dev, production, and Docker
+      const res = await fetch("/api/user/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -355,8 +355,11 @@ function CompleteProfileContent() {
       // Hard navigate forces a full page reload so the middleware reads the
       // fresh ns_profile cookie set by the API route above.
       window.location.href = callbackUrl;
-    } catch {
-      setSubmitError("Network error. Please try again.");
+    } catch (err) {
+      const msg = err instanceof TypeError && err.message
+        ? `Network error: ${err.message}`
+        : "Network error. Please try again.";
+      setSubmitError(msg);
       setSubmitting(false);
     }
   }
