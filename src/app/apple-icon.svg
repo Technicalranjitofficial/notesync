@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" fill="none">
+  <!-- Background -->
+  <rect width="180" height="180" rx="40" fill="#0c0c0e"/>
+  <!-- Subtle grid -->
+  <line x1="0" y1="60" x2="180" y2="60" stroke="#ffffff" stroke-width="0.4" opacity="0.04"/>
+  <line x1="0" y1="120" x2="180" y2="120" stroke="#ffffff" stroke-width="0.4" opacity="0.04"/>
+  <line x1="60" y1="0" x2="60" y2="180" stroke="#ffffff" stroke-width="0.4" opacity="0.04"/>
+  <line x1="120" y1="0" x2="120" y2="180" stroke="#ffffff" stroke-width="0.4" opacity="0.04"/>
+  <!-- Amber glow -->
+  <circle cx="90" cy="90" r="65" fill="rgba(245,158,11,0.06)"/>
+  <!-- Note document -->
+  <rect x="38" y="42" width="74" height="96" rx="10" fill="#16161a" stroke="#f59e0b" stroke-width="4"/>
+  <!-- Text lines -->
+  <line x1="53" y1="68" x2="97" y2="68" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"/>
+  <line x1="53" y1="84" x2="97" y2="84" stroke="#9a9488" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+  <line x1="53" y1="100" x2="82" y2="100" stroke="#9a9488" stroke-width="4" stroke-linecap="round" opacity="0.5"/>
+  <line x1="53" y1="116" x2="90" y2="116" stroke="#9a9488" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
+  <!-- Sync arc -->
+  <path d="M108 72 C134 72 146 86 146 100 C146 114 134 128 108 128" stroke="#f59e0b" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <!-- Arrow tip -->
+  <polyline points="100,118 108,128 100,138" stroke="#f59e0b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Amber dot accent -->
+  <circle cx="148" cy="36" r="10" fill="#f59e0b" opacity="0.9"/>
+</svg>
