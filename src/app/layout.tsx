@@ -131,7 +131,9 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [
       {
-        url: "/og-image.png",
+        // Absolute URL — required by WhatsApp, Facebook, and most crawlers
+        // This resolves to the dynamic ImageResponse from opengraph-image.tsx
+        url: `${BASE_URL}/opengraph-image`,
         width: 1200,
         height: 630,
         alt: "NoteSync — Free Notes, PYQs & Solutions for Indian University Students",
@@ -149,7 +151,7 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [
       {
-        url: "/og-image.png",
+        url: `${BASE_URL}/opengraph-image`,
         alt: "NoteSync — India's University Notes Platform",
       },
     ],
