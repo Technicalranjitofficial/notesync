@@ -1,26 +1,197 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-cal-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* ── Core palette ───────────────────────────── */
+  --color-bg:         #0c0c0e;   /* near-black with warmth       */
+  --color-bg-2:       #111114;   /* slightly lifted               */
+  --color-bg-3:       #16161a;   /* card surface                  */
+  --color-bg-4:       #1c1c22;   /* hover / elevated              */
+
+  /* ── Amber accent ───────────────────────────── */
+  --color-amber:      #f59e0b;
+  --color-amber-dim:  #92400e;
+  --color-amber-glow: rgba(245, 158, 11, 0.12);
+  --color-amber-border: rgba(245, 158, 11, 0.25);
+
+  /* ── Text scale ─────────────────────────────── */
+  --color-text-1:  #f0ece4;   /* primary — warm white           */
+  --color-text-2:  #9a9488;   /* secondary                      */
+  --color-text-3:  #58534a;   /* muted                          */
+  --color-text-4:  #2e2b25;   /* very muted / decorative        */
+
+  /* ── Borders ────────────────────────────────── */
+  --color-border:   rgba(240, 236, 228, 0.07);
+  --color-border-2: rgba(240, 236, 228, 0.12);
+
+  /* ── Semantic ───────────────────────────────── */
+  --color-green:  #22c55e;
+  --color-red:    #ef4444;
+  --color-blue:   #60a5fa;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ──────────────────────────────────────────────── */
+/*  Base                                            */
+/* ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  background-color: var(--color-bg);
+  color: var(--color-text-1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-bg-4); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-3); }
+
+/* Selection */
+::selection { background: rgba(245,158,11,0.2); color: var(--color-amber); }
+
+/* ──────────────────────────────────────────────── */
+/*  Noise overlay — gives depth without gradients  */
+/* ──────────────────────────────────────────────── */
+.noise {
+  position: relative;
+  isolation: isolate;
+}
+.noise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* ──────────────────────────────────────────────── */
+/*  Amber ambient glow                              */
+/* ──────────────────────────────────────────────── */
+.amber-glow {
+  box-shadow: 0 0 0 1px var(--color-amber-border),
+              0 8px 40px -8px rgba(245, 158, 11, 0.2);
+}
+
+.amber-glow-text {
+  text-shadow: 0 0 40px rgba(245, 158, 11, 0.4);
+}
+
+/* ──────────────────────────────────────────────── */
+/*  Grid texture                                    */
+/* ──────────────────────────────────────────────── */
+.bg-grid-dark {
+  background-image:
+    linear-gradient(to right, rgba(240,236,228,0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(240,236,228,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ──────────────────────────────────────────────── */
+/*  Marquee                                         */
+/* ──────────────────────────────────────────────── */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marquee-reverse {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.animate-marquee {
+  display: flex;
+  animation: marquee 28s linear infinite;
+  width: max-content;
+}
+.animate-marquee-reverse {
+  display: flex;
+  animation: marquee-reverse 32s linear infinite;
+  width: max-content;
+}
+.animate-marquee:hover,
+.animate-marquee-reverse:hover { animation-play-state: paused; }
+
+/* ──────────────────────────────────────────────── */
+/*  Blinking cursor                                 */
+/* ──────────────────────────────────────────────── */
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+
+/* ──────────────────────────────────────────────── */
+/*  Bento grid helpers                              */
+/* ──────────────────────────────────────────────── */
+.bento-cell {
+  background: var(--color-bg-3);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+}
+.bento-cell:hover {
+  border-color: var(--color-border-2);
+  background: var(--color-bg-4);
+}
+
+/* ──────────────────────────────────────────────── */
+/*  File-tree styles                                */
+/* ──────────────────────────────────────────────── */
+.file-tree-line {
+  position: relative;
+  padding-left: 1.25rem;
+}
+.file-tree-line::before {
+  content: "";
+  position: absolute;
+  left: 0.45rem;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-border-2);
+}
+.file-tree-line > *::before {
+  content: "─ ";
+  color: var(--color-text-3);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+
+/* ──────────────────────────────────────────────── */
+/*  Progress line (How it works)                    */
+/* ──────────────────────────────────────────────── */
+@keyframes progress-grow {
+  from { height: 0%; }
+  to   { height: 100%; }
+}
+
+/* ──────────────────────────────────────────────── */
+/*  Glow pulse                                      */
+/* ──────────────────────────────────────────────── */
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* ──────────────────────────────────────────────── */
+/*  Stagger fade-up (for JS-free fallback)          */
+/* ──────────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.6s ease forwards;
 }
