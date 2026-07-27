@@ -59,8 +59,30 @@ export default function RegisterPage() {
       return;
     }
 
-    // In production: POST to /api/auth/register to create user in DB
-    // Then sign in automatically
+    // Step 1: Create user in the NestJS backend (MongoDB via Prisma)
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001/api/v1"}/auth/register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password, universitySlug: university || undefined }),
+        },
+      );
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { message?: string };
+        const msg = Array.isArray(body.message) ? body.message[0] : (body.message ?? "Registration failed.");
+        setError(msg);
+        setLoading(null);
+        return;
+      }
+    } catch {
+      setError("Could not reach the server. Please try again.");
+      setLoading(null);
+      return;
+    }
+
+    // Step 2: Sign in with the newly created credentials
     const result = await signIn("credentials", {
       email,
       password,

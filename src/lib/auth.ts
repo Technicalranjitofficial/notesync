@@ -1,30 +1,50 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
 
-// ── Mock user store (replace with real DB lookup in production) ──────────────
-const MOCK_USERS = [
-  {
-    id: "1",
-    email: "student@kiit.ac.in",
-    name: "Demo Student",
-    password: bcrypt.hashSync("demo1234", 10),
-    image: null as string | null,
-    isPremium: false,
-    university: "kiit",
-  },
-];
+const API_URL = process.env.API_URL ?? "http://localhost:8001/api/v1";
 
-async function getUserByEmail(email: string) {
-  return MOCK_USERS.find((u) => u.email === email) ?? null;
+// Shape returned by the NestJS backend on successful auth
+interface BackendAuthResponse {
+  accessToken: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image?: string | null;
+    isPremium: boolean;
+    universitySlug?: string | null;
+    roles: string[];
+    emailVerified: boolean;
+  };
+}
+
+async function callBackend(path: string, body: Record<string, unknown>): Promise<BackendAuthResponse | null> {
+  try {
+    const res = await fetch(`${API_URL}/auth/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as BackendAuthResponse;
+  } catch {
+    return null;
+  }
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
+    // ── Google OAuth ───────────────────────────────────────────────
+    // NextAuth resolves Google → we get an idToken → send to NestJS backend
+    // which verifies it, upserts the user in MongoDB, and returns our JWT.
     Google({
       clientId: process.env.AUTH_GOOGLE_ID ?? "",
       clientSecret: process.env.AUTH_GOOGLE_SECRET ?? "",
+      // Request the openid scope so we get an id_token back
+      authorization: {
+        params: { scope: "openid email profile" },
+      },
     }),
 
     Credentials({
@@ -37,33 +57,64 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const email = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
         if (!email || !password) return null;
-        const user = await getUserByEmail(email);
-        if (!user) return null;
-        const valid = await bcrypt.compare(password, user.password);
-        if (!valid) return null;
+
+        const data = await callBackend("login", { email, password });
+        if (!data) return null;
+
         return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          isPremium: user.isPremium,
-          university: user.university,
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          image: data.user.image ?? null,
+          isPremium: data.user.isPremium,
+          university: data.user.universitySlug ?? null,
+          authToken: data.accessToken,
         };
       },
     }),
   ],
 
   callbacks: {
+    // ── signIn: called after Google resolves, before jwt callback ──
+    // We send the Google idToken to our backend to upsert the user.
+    async signIn({ user, account }) {
+      if (account?.provider === "google" && account.id_token) {
+        const data = await callBackend("google-token", {
+          idToken: account.id_token,
+        });
+
+        if (!data) {
+          // Backend rejected the token — block sign-in
+          return false;
+        }
+
+        // Attach backend data to the user object so jwt() can pick it up
+        user.id = data.user.id;
+        user.name = data.user.name;
+        user.email = data.user.email;
+        user.image = data.user.image ?? null;
+        user.isPremium = data.user.isPremium;
+        user.university = data.user.universitySlug ?? null;
+        user.authToken = data.accessToken;
+      }
+      return true;
+    },
+
     async jwt({ token, user }) {
+      // `user` is only present on the first sign-in
       if (user) {
         token.id = user.id ?? "";
         token.isPremium = (user as { isPremium?: boolean }).isPremium ?? false;
-        token.university = (user as { university?: string }).university ?? null;
+        token.university = (user as { university?: string | null }).university ?? null;
+        token.authToken = (user as { authToken?: string }).authToken ?? "";
+        token.profileComplete = false; // read from ns_profile cookie on client
       }
+
       // Auto-premium for 2025 batch emails
-      if (typeof token.email === "string" && token.email.startsWith("25")) {
+      if (typeof token.email === "string" && /^25\d{5}@/.test(token.email)) {
         token.isPremium = true;
       }
+
       return token;
     },
 
@@ -72,9 +123,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id as string;
         session.user.isPremium = token.isPremium as boolean;
         session.user.university = token.university as string | null;
-        // profileComplete is now tracked via the ns_profile cookie, not the JWT.
-        // The session value is derived from the cookie on the client side.
-        session.user.profileComplete = false; // client reads from cookie directly
+        session.user.authToken = token.authToken as string;
+        // profileComplete is tracked via the ns_profile cookie on the client
+        session.user.profileComplete = false;
       }
       return session;
     },

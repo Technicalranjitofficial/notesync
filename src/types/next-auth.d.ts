@@ -12,6 +12,8 @@ declare module "next-auth" {
       university: string | null;
       /** true once the user has submitted the complete-profile form */
       profileComplete: boolean;
+      /** JWT from the NestJS backend — used for API calls */
+      authToken: string;
     };
   }
 
@@ -19,6 +21,7 @@ declare module "next-auth" {
     isPremium?: boolean;
     university?: string | null;
     profileComplete?: boolean;
+    authToken?: string;
   }
 }
 
@@ -29,5 +32,7 @@ declare module "next-auth/jwt" {
     university: string | null;
     /** true once the user has submitted the complete-profile form */
     profileComplete: boolean;
+    /** JWT from the NestJS backend */
+    authToken: string;
   }
 }
